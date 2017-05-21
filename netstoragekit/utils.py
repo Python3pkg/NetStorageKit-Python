@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sys import exc_info
 import traceback
-from urllib import quote_plus
+from urllib.parse import quote_plus
 from collections import defaultdict
 from .exceptions import NetStorageKitError
 
@@ -11,7 +11,7 @@ def reraise_exception(exception):
     The original exception information is preserved.
     """
     type_, value, traceback = exc_info()
-    raise NetStorageKitError, '%s(%s)' % (type_.__name__, value), traceback
+    raise NetStorageKitError('%s(%s)' % (type_.__name__, value)).with_traceback(traceback)
 
 
 def format_exception():
@@ -23,7 +23,7 @@ def escape(value):
     """Escapes the value to use it as a query string parameter."""
     if value is None:
         return ''
-    string = str(value.encode('utf-8') if type(value) is unicode else value)
+    string = str(value.encode('utf-8') if type(value) is str else value)
     return quote_plus(string)
 
 
@@ -47,7 +47,7 @@ def format_headers(headers, prefix=''):
     For testing and debugging purposes.
     """
     return '\n'.join(['%s%s: %s' % (prefix, k, v)
-                      for k, v in headers.items()])
+                      for k, v in list(headers.items())])
 
 
 def format_response(response):
@@ -81,13 +81,13 @@ def xml_to_data(xml_etree):
     if children:
         dd = defaultdict(list)
         for dc in map(xml_to_data, children):
-            for k, v in dc.iteritems():
+            for k, v in dc.items():
                 dd[k].append(v)
         dd = Data(dd)
         d = Data({xml_etree.tag: Data({k: v[0] if len(v) == 1
-                                       else v for k, v in dd.iteritems()})})
+                                       else v for k, v in dd.items()})})
     if xml_etree.attrib:
-        d[xml_etree.tag].update(Data((k, v) for k, v in xml_etree.attrib.iteritems()))
+        d[xml_etree.tag].update(Data((k, v) for k, v in xml_etree.attrib.items()))
     if xml_etree.text:
         text = xml_etree.text.strip()
         if children or xml_etree.attrib:

@@ -76,7 +76,7 @@ class Request(object):
         """
         # Escape the parameters
         values = {'version': 1, 'action': action, 'format': 'xml'}
-        values.update({k: escape(v) for k, v in parameters.items()})
+        values.update({k: escape(v) for k, v in list(parameters.items())})
         # The query string parameters must sorted alphabetically
         # for testing purposes
         value = '&'.join(['%s=%s' % (k, values[k]) for k in sorted(values)])
@@ -119,9 +119,9 @@ class Request(object):
             A dict of headers.
         """
         action_header = self._get_action_header(action, **parameters)
-        action_value = action_header.values()[0]
+        action_value = list(action_header.values())[0]
         data_header = self._get_data_header()
-        data_value = data_header.values()[0]
+        data_value = list(data_header.values())[0]
         sign_header = self._get_sign_header(path, data_value, action_value)
         headers = {
             'Host': self.host,
@@ -185,7 +185,7 @@ class Request(object):
             success %= (response.status_code, action, url, parameters)
             log.info(success)
             response.raise_for_status()
-        except Exception, e:
+        except Exception as e:
             error = '[%s] Failed to call %s %s: %s %s %s'
             tb = format_exception()
             if response:
@@ -228,7 +228,7 @@ class Request(object):
                 if data and response.headers['Content-Type'].startswith('text/xml'):
                     xml = et.fromstring(data)
                     data = xml_to_data(xml)
-        except (et.ParseError, AttributeError), e:
+        except (et.ParseError, AttributeError) as e:
             log.critical('[101] Failed to get response: ' + e.message)
             reraise_exception(e)
         return data, response
@@ -265,7 +265,7 @@ class Request(object):
             if data and response.headers['Content-Type'].startswith('text/xml'):
                 xml = et.fromstring(data)
                 data = xml_to_data(xml)
-        except (et.ParseError, AttributeError), e:
+        except (et.ParseError, AttributeError) as e:
             log.critical('[102] Failed to parse response: ' + e.message)
             reraise_exception(e)
         return data, response
@@ -381,7 +381,7 @@ class Request(object):
                 for chunk in response.iter_content(chunk_size=100000):
                     f.write(chunk)
                     f.flush()
-        except Exception, e:
+        except Exception as e:
             log.critical('[103] Failed to write in %s: %s' % (destination, str(e)))
             reraise_exception(e)
         return None, response
@@ -414,7 +414,7 @@ class Request(object):
                 'size': len(data),
                 'upload-type': 'binary'}
             _, response = self._send_write_action(path, 'upload', data, **parameters)
-        except Exception, e:
+        except Exception as e:
             log.critical('[104] Failed to read/upload %s: %s' % (source, str(e)))
             reraise_exception(e)
         return None, response
@@ -463,7 +463,7 @@ class Request(object):
         parameters = {'quick-delete': im_really_really_sure}
         try:
             _, response = self._send_write_action(path, 'quick-delete', None, **parameters)
-        except Exception, e:
+        except Exception as e:
             log.critical('[105] Failed to quick-delete %s: %s' % (path, str(e)))
             log.warning('The quick-delete call must be enabled by Akamai for this CPCode')
             reraise_exception(e)

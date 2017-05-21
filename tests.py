@@ -104,8 +104,8 @@ def test_api_http_headers():
                             'x-akamai-acs-action:%s\n' % expected_action)
 
     # Should accept numeric, string or unicode parameters
-    data = ns.auth.get_data(unicode(key_name), timestamp=1280000000, unique_id=382644692)
-    sign = ns.auth.get_sign(unicode(key), cpcode, path, expected_data, expected_action)
+    data = ns.auth.get_data(str(key_name), timestamp=1280000000, unique_id=382644692)
+    sign = ns.auth.get_sign(str(key), cpcode, path, expected_data, expected_action)
     sign_string = ns.auth.get_sign_string(cpcode, path, expected_data, expected_action)
     sign_string.replace('&format=xml', '')
 
@@ -157,7 +157,7 @@ def test_http_parameters():
 
     request = ns.api.Request('test-key', '123', '12345', 'host', testing=True)
     # Parameters should be properly escaped as part of the action header
-    parameters = {'p1': 'Simple text', 'p2': 'mamá', 'p3': u's\xe9',
+    parameters = {'p1': 'Simple text', 'p2': 'mamá', 'p3': 's\xe9',
                   'size': 0, 'foo': None}
     _, r = request.mock(**parameters)
     expected_quoted_params = 'p1=Simple+text&p2=mam%C3%A1&p3=s%C3%A9'
